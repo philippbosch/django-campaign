@@ -4,6 +4,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.core.mail import EmailMultiAlternatives
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes import generic
 from campaign.fields import JSONField
 from campaign.context import MailContext
 from campaign.backends import backend
@@ -22,6 +23,7 @@ class MailTemplate(models.Model):
     plain = models.TextField(_(u"Plaintext Body"))
     html = models.TextField(_(u"HTML Body"), blank=True, null=True)
     subject = models.CharField(_(u"Subject"), max_length=255)
+    content_type = models.ForeignKey(ContentType, blank=True, null=True)
     
     def __unicode__(self):
         return self.name
@@ -72,6 +74,9 @@ class Campaign(models.Model):
     template = models.ForeignKey(MailTemplate, verbose_name=_(u"Template"))
     recipients = models.ManyToManyField(SubscriberList, verbose_name=_(u"Subscriber lists"))
     sent = models.BooleanField(_(u"sent out"), default=False, editable=False)
+    content_content_type = models.ForeignKey(ContentType, blank=True)
+    content_object_id = models.PositiveIntegerField(_(u"Content Object"), blank=True)
+    content_object = generic.GenericForeignKey('content_content_type', 'content_object_id')
     online = models.BooleanField(_(u"available online"), default=True, blank=True, help_text=_(u"make a copy available online"))
     
     def __unicode__(self):
@@ -105,7 +110,7 @@ class Campaign(models.Model):
                 recipient_email = getattr(recipient, recipient_list.email_field_name)
                 if not BlacklistEntry.objects.filter(email=recipient_email).count() and not recipient_email in used_addresses:
                     msg = EmailMultiAlternatives(subject, to=[recipient_email,])
-                    context = MailContext(recipient)
+                    context = MailContext(recipient, dict={'content': self.content_object})
                     msg.body = text_template.render(context)
                     if self.template.html is not None and self.template.html != u"":
                         html_content = html_template.render(context)

@@ -1,5 +1,61 @@
 {% extends "admin/change_form.html" %}
-{% load i18n %}
+{% load i18n adminmedia campaign_tags %}
+
+{% block extrahead %}{{ block.super }}
+<script type="text/javascript">
+    function initContentReference() {
+        var content_type_row = document.getElementById('id_content_content_type').parentNode.parentNode;
+        var content_object_row = document.getElementById('id_content_object_id').parentNode.parentNode;
+        content_type_row.style['position'] = 'absolute';
+        content_type_row.style['left'] = '-1000px';
+        
+        var object_id_div = document.getElementById('id_content_object_id').parentNode;
+        var lookup_span = document.createElement('span');
+        lookup_span.innerHTML = '<a id="lookup_id_content_object_id" href="#" class="related-lookup" onclick="if(document.getElementById(\'id_content_content_type\').value) { return showRelatedObjectLookupPopup(this); }" style="margin-left:4px;"><img src="{% admin_media_prefix %}img/admin/selector-search.gif" width="16" height="16" alt="Loopup" /></a>';
+        object_id_div.insertBefore(lookup_span, object_id_div.lastChild);
+        var lookup_link = document.getElementById('lookup_id_content_object_id');
+        
+        var model_name_span = document.createElement('span');
+        model_name_span.innerHTML = document.getElementById('id_template').value;
+        object_id_div.insertBefore(model_name_span, document.getElementById('id_content_object_id'));
+        
+        var template_select = document.getElementById('id_template');
+        templateChange();
+        
+        addEvent(template_select, 'change', templateChange);
+        
+        function templateChange(e) {
+            var content_type_field = document.getElementById('id_content_content_type');
+            var t = template_contenttype_mapping[template_select.value];
+            if (t) {
+                content_type_field.value = t.content_type_id;
+                model_name_span.innerHTML = t.content_type_model.substr(0,1).toUpperCase() + t.content_type_model.substr(1) + ' ';
+                lookup_link.setAttribute('href', '../../../' + t.content_type_app_label + '/' + t.content_type_model + '/');
+                lookup_link.parentNode.style['display'] = 'inline';
+                content_object_row.style['display'] = 'block';
+            } else {
+                content_type_field.value = null;
+                model_name_span.innerHTML = '';
+                lookup_link.setAttribute('href', '#');
+                lookup_link.parentNode.style['display'] = 'none';
+                content_object_row.style['display'] = 'none';
+            }
+        }
+    }
+    
+    {% get_content_content_types_for_templates as ctlist %}
+    var template_contenttype_mapping = {};
+    {% for t in ctlist %}
+    template_contenttype_mapping[{{ t.id }}] = {
+        'content_type_id': {{ t.content_type_id }},
+        'content_type_app_label': '{{ t.content_type_app_label }}',
+        'content_type_model': '{{ t.content_type_model }}'
+    };
+    {% endfor %}
+    
+    addEvent(window, 'load', initContentReference);
+</script>
+{% endblock %}
 
 {% block object-tools %}
 {% if change %}{% if not is_popup %}

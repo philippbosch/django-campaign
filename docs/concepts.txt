@@ -21,7 +21,7 @@ module one would simply add a SubscriberList object::
 
     from django.contrib.auth.models import User
     from django.contrib.contenttypes.models import ContentType
-    from campaing.models import SubscriberList
+    from campaign.models import SubscriberList
     
     obj = SubscriberList.objects.create(
                 content_type=ContentType.objects.get_for_model(User), 
