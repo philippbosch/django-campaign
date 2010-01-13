@@ -9,7 +9,7 @@ setup(
     author_email='arne@rcs4u.de',
     license="BSD",
     url='http://code.google.com/p/django-campaign/',
-    download_url='http://code.google.com/p/django-campaign/downloads/list'
+    download_url='http://code.google.com/p/django-campaign/downloads/list',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',
